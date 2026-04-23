@@ -4,7 +4,7 @@ import './index.css';
 const scenes = [
   {
     image: "/assets/Imágen1.jpeg",
-    text: "sólo un compartimiento estaba ocupado por un hombre, un hombre rubio que no apartó la mirada de un libro cuando ella cruzaba por allí."
+    text: "Sólo un compartimiento estaba ocupado por un hombre, un hombre rubio que no apartó la mirada de un libro cuando ella cruzaba por allí."
   },
   {
     image: "/assets/Imágen2.jpeg",
@@ -62,14 +62,14 @@ const TypewriterText = ({ text, onComplete, speed = 40 }) => {
   const [displayedText, setDisplayedText] = useState('');
 
   useEffect(() => {
-    setDisplayedText('');
     let currentIndex = 0;
-    
+    setDisplayedText('');
+
     const interval = setInterval(() => {
-      if (currentIndex < text.length) {
-        setDisplayedText(prev => prev + text[currentIndex]);
-        currentIndex++;
-      } else {
+      currentIndex++;
+      setDisplayedText(text.slice(0, currentIndex));
+
+      if (currentIndex >= text.length) {
         clearInterval(interval);
         if (onComplete) onComplete();
       }
@@ -88,6 +88,7 @@ function App() {
   const [imageLoaded, setImageLoaded] = useState(false);
 
   // Audio References
+  const bgMusicRef = useRef(null);
   const suspenseAudioRef = useRef(null);
   const trainAudioRef = useRef(null);
   const footstepsAudioRef = useRef(null);
@@ -111,19 +112,24 @@ function App() {
 
   const handleStart = () => {
     setHasStarted(true);
-    // Play sound engines on start screen
+    // Play background music from the very start
+    if (bgMusicRef.current) {
+      bgMusicRef.current.volume = 0.55;
+      bgMusicRef.current.play().catch(e => console.log('BG music autoplay blocked', e));
+    }
+    // Play ambient sound engines
     if (suspenseAudioRef.current) {
-      suspenseAudioRef.current.volume = 0.5;
+      suspenseAudioRef.current.volume = 0.25;
       suspenseAudioRef.current.play().catch(e => console.log('Audio autoplay blocked', e));
     }
     if (trainAudioRef.current) {
-      trainAudioRef.current.volume = 0.3;
+      trainAudioRef.current.volume = 0.15;
       trainAudioRef.current.play().catch(e => console.log('Audio autoplay blocked', e));
     }
   };
 
   const isChoiceScene = currentScene < scenes.length && scenes[currentScene].type === 'choice';
-  
+
   const handleNext = () => {
     if (isChoiceScene) return; // Must select option, no fast tap skip
 
@@ -131,7 +137,7 @@ function App() {
       setTextComplete(true);
       return;
     }
-    
+
     if (currentScene < scenes.length) {
       // Play footstep sound effect on standard transitions (not final)
       if (footstepsAudioRef.current && scenes[currentScene].type !== 'finalQuestions') {
@@ -154,32 +160,10 @@ function App() {
 
   const isEnd = currentScene >= scenes.length;
 
-  if (!hasStarted) {
-    return (
-      <div className="start-screen" onClick={handleStart}>
-        <div className="pulse-circle"></div>
-        <h1 className="start-title">La pasajera del tren</h1>
-        <p className="start-subtitle">Toca la pantalla para comenzar</p>
-        <p className="start-hint">Asegúrate de tener el volumen encendido</p>
-        
-        <audio ref={suspenseAudioRef} src="https://actions.google.com/sounds/v1/horror/ambient_horror_drone.ogg" loop />
-        <audio ref={trainAudioRef} src="https://actions.google.com/sounds/v1/transportation/railroad_track.ogg" loop />
-        <audio ref={footstepsAudioRef} src="https://actions.google.com/sounds/v1/foley/footsteps_on_concrete.ogg" />
-      </div>
-    );
-  }
-
-  if (isEnd) {
-    return (
-      <div className="end-screen">
-        <h1 className="end-text">Fin</h1>
-      </div>
-    );
-  }
-
-  const scene = scenes[currentScene];
-
   const renderSceneContent = () => {
+    const scene = scenes[currentScene];
+    if (!scene) return null;
+
     switch (scene.type) {
       case 'dark':
         return (
@@ -241,21 +225,21 @@ function App() {
         // Default visual novel screen
         return (
           <>
-            <img 
+            <img
               key={scene.image} // Force re-render relative animation
-              src={scene.image} 
-              alt={`Escena`} 
-              className={`background-image ${imageLoaded ? 'loaded' : ''}`} 
+              src={scene.image}
+              alt={`Escena`}
+              className={`background-image ${imageLoaded ? 'loaded' : ''}`}
               onLoad={() => setImageLoaded(true)}
             />
-            
+
             <div className="dialog-overlay">
               {textComplete ? (
                 <span className="dialog-text">{scene.text}</span>
               ) : (
-                <TypewriterText 
-                  text={scene.text} 
-                  onComplete={() => setTextComplete(true)} 
+                <TypewriterText
+                  text={scene.text}
+                  onComplete={() => setTextComplete(true)}
                 />
               )}
               {(textComplete || currentScene >= 0) && (
@@ -268,13 +252,29 @@ function App() {
   };
 
   return (
-    <div className="visual-novel-container" onClick={handleNext}>
+    <>
+      <audio ref={bgMusicRef} src="/assets/The_Last_Wooden_Berth.mp3" loop />
       <audio ref={suspenseAudioRef} src="https://actions.google.com/sounds/v1/horror/ambient_horror_drone.ogg" loop />
       <audio ref={trainAudioRef} src="https://actions.google.com/sounds/v1/transportation/railroad_track.ogg" loop />
       <audio ref={footstepsAudioRef} src="https://actions.google.com/sounds/v1/foley/footsteps_on_concrete.ogg" />
 
-      {renderSceneContent()}
-    </div>
+      {!hasStarted ? (
+        <div className="start-screen" onClick={handleStart}>
+          <div className="pulse-circle"></div>
+          <h1 className="start-title">La pasajera del tren</h1>
+          <p className="start-subtitle">Toca la pantalla para comenzar</p>
+          <p className="start-hint">Asegúrate de tener el volumen encendido</p>
+        </div>
+      ) : isEnd ? (
+        <div className="end-screen">
+          <h1 className="end-text">Fin</h1>
+        </div>
+      ) : (
+        <div className="visual-novel-container" onClick={handleNext}>
+          {renderSceneContent()}
+        </div>
+      )}
+    </>
   );
 }
 

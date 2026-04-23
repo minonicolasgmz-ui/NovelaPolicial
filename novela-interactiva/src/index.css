@@ -275,7 +275,7 @@ body, html {
 
 .choice-title {
   font-size: 2rem;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
   color: #cbd5e1;
   font-weight: 300;
   letter-spacing: 0.1em;
@@ -310,11 +310,11 @@ body, html {
 }
 
 .card-image-wrapper {
-  width: 90px;
-  height: 90px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
   overflow: hidden;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   background-color: #1e293b;
   display: flex;
   justify-content: center;
@@ -387,5 +387,23 @@ body, html {
   }
   .start-subtitle {
     font-size: 1rem;
+  }
+  .choice-grid {
+    gap: 1rem;
+  }
+  .choice-card {
+    padding: 0.8rem;
+  }
+  .card-image-wrapper {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 1rem;
+  }
+  .choice-card h3 {
+    font-size: 1rem;
+  }
+  .choice-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
   }
 }
